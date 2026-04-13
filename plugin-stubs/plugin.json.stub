@@ -31,5 +31,7 @@
 
   "navigation": [],
 
-  "payloads": []
+  "payloads": [],
+
+  "interfaces": []
 }

@@ -61,6 +61,15 @@
 - Nach Frontend-Build (npm run build): dist/ committen
 - node_modules/ wird NICHT committed (nur fuer lokale Entwicklung)
 
+## Custom Group Interfaces
+- Plugins can register custom interface types that appear in Group Settings as "View Mode" options
+- Declare interfaces in plugin.json under "interfaces" array
+- Each interface has: id, name, description, component (ESM in dist/interfaces/), settings_fields, default_chat_enabled
+- The component receives: group, chat, interfaceSettings as props
+- settings_fields are configurable per group in Team Settings
+- interface_chat_enabled controls whether the chat input bar is visible (true/false, togglable by admin)
+- Example: {"id": "{{PLUGIN_SLUG}}-dashboard", "name": "Custom Dashboard", "component": "Dashboard", "description": "Custom view", "settings_fields": [{"key": "title", "type": "text", "label": "Title"}], "default_chat_enabled": true}
+
 ## Konventionen
 - Plugin-Tabellen muessen mit dem Plugin-ID prefixed sein (z.B. {{PLUGIN_SLUG}}_contacts)
 - App-IDs muessen mit Plugin-ID prefixed sein (z.B. {{PLUGIN_SLUG}})
