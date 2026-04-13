@@ -1,0 +1,71 @@
+# plotdesk Plugin Development
+
+## Architektur
+- Dieses Plugin wird als plotdesk Extension geladen
+- Es laeuft im Kontext einer plotdesk-Instanz (Laravel 12, PHP 8.3)
+- Plugins registrieren Apps (AI Functions) ueber plugin.json, nicht direkt
+- App-Klassen erweitern BasicApp (wie Core-Apps)
+- Verfuegbare plotdesk-Services: ChatMessage, Team, User, Group, StorageService
+
+## App / Function Handler Pattern
+- App-Klassen leben in src/Apps/{AppName}/{AppName}App.php
+- Sie erweitern BasicApp und implementieren getFunctions()
+- Handler-Methode: FunctionName($arguments, ChatMessage $message, ChatMessageApp $chatMessageApp, ?ChatMessage $originalMessage): string
+- Function name in snake_case -> Methode in StudlyCase (z.B. search_contacts -> SearchContacts)
+- Return: String fuer den AI-Kontext
+- Fuer Frontend-Rendering: $message->attachPayload($function, $args, $results)
+- Fuer Loading-States: $message->setLoading($key, $text) / $message->removeLoading($key)
+
+## Verfuegbare plotdesk APIs
+- StorageService::savePrivateFileForChat($content, $filename, $chatId) - Private Dateien speichern
+- StorageService::downloadAndSaveAssetFromUrl($url, $filename) - URLs als oeffentliche Assets speichern
+- StorageService::downloadAndSaveAssetFromFile($content, $filename) - Content als Asset speichern
+- $message->attachPayload($function, $args, $results) - Rich UI Output (returns UUID)
+- $message->setPayload($payloadId, $function, $args, $results) - Payload aktualisieren
+- $message->setLoading($key, $text) - Loading Spinner anzeigen
+- $message->removeLoading($key) - Loading Spinner entfernen
+- $this->team - Aktuelles Team Model
+- $this->app->appSettings - App-Settings (konfiguriert pro Team/Gruppe)
+- data_get($this->app, 'appSettings.setting_key') - Einzelnes Setting lesen
+
+## AI-Zugriff fuer Plugins
+- PluginAi::call(team, systemPrompt, userPrompt, contextType, ...) - Direkter AI-Aufruf (einfach)
+- PluginChat::run(team, groupId, userMessage, contextType, ...) - Chat mit vollem Plattform-Zugriff
+- contextType immer als 'plugin:{pluginId}:{action}' formatieren
+- Kosten werden automatisch getrackt
+
+## Permissions
+- Eigene Permissions in plugin.json unter "permissions" deklarieren (global + group)
+- Immer namespaced (z.B. "view_crm_dashboard", nicht "view_dashboard")
+- Pruefen via $user->hasPermission('view_crm_dashboard')
+- Oder $user->hasPermissionForGroup('permission', $groupId) fuer Gruppen-Permissions
+- In Navigation: "permission": "view_crm_dashboard" in plugin.json
+
+## Integration Points (Hooks)
+- Domain Events: Lausche auf chat.created, chat.message.created, user.joined_team etc. via events() in ServiceProvider
+- Model Observers: ChatMessage::observe() in boot()
+- Queue Jobs: Eigene Jobs mit ShouldQueue, $queue = 'default' (NICHT 'chat')
+- Broadcasting: Eigene WebSocket Events auf plugin.{pluginId}.{teamId} Channels
+- Notifications: $user->notify(new MyNotification())
+- Console Commands: Registriere in boot() mit $this->commands([])
+- Scheduled Tasks: In schedule() Methode des ServiceProviders
+- Cache: PluginCache::remember($pluginId, $key, $teamId, $minutes, $callback)
+- Mail: Eigene Mailables mit Plugin-namespaced Views
+- Shared Props: PluginSharedData::register($pluginId, fn() => [...]) fuer Frontend
+
+## Build & Git
+- vendor/ wird ins Git committed (Plugin liefert Dependencies fertig aus)
+- dist/ wird ins Git committed (Pre-built Frontend Assets)
+- .gitignore darf vendor/ und dist/ NICHT ignorieren!
+- Nach composer install/update: vendor/ committen
+- Nach Frontend-Build (npm run build): dist/ committen
+- node_modules/ wird NICHT committed (nur fuer lokale Entwicklung)
+
+## Konventionen
+- Plugin-Tabellen muessen mit dem Plugin-ID prefixed sein (z.B. {{PLUGIN_SLUG}}_contacts)
+- App-IDs muessen mit Plugin-ID prefixed sein (z.B. {{PLUGIN_SLUG}})
+- Routes leben unter /plugins/{{PLUGIN_SLUG}}/
+- API Routes unter /api/plugins/{{PLUGIN_SLUG}}/
+- Translations im resources/lang/ Ordner, Namespace: {{PLUGIN_SLUG}}::
+- Permission-Namen muessen eindeutig namespaced sein
+- Artisan Commands: plugin:{{PLUGIN_SLUG}}:command-name

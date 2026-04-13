@@ -1,0 +1,83 @@
+#!/usr/bin/env php
+<?php
+
+if ($argc < 3 || $argv[1] !== 'create') {
+    echo "Usage: plotdesk-plugin create <plugin-name>\n";
+    echo "\nCreates a new plotdesk plugin project with boilerplate.\n";
+    exit(1);
+}
+
+$pluginName = $argv[2];
+$pluginSlug = strtolower(preg_replace('/[^a-zA-Z0-9-]/', '-', $pluginName));
+$pluginStudly = str_replace(' ', '', ucwords(str_replace('-', ' ', $pluginSlug)));
+$namespace = $pluginStudly;
+
+$targetDir = getcwd() . '/' . $pluginSlug;
+
+if (is_dir($targetDir)) {
+    echo "Error: Directory '{$pluginSlug}' already exists.\n";
+    exit(1);
+}
+
+$stubsDir = dirname(__DIR__) . '/plugin-stubs';
+
+echo "Creating plotdesk plugin: {$pluginName}\n";
+echo "Directory: {$targetDir}\n";
+echo "Namespace: {$namespace}\n\n";
+
+$dirs = [
+    '',
+    '/src',
+    '/src/Apps/' . $pluginStudly,
+    '/src/Http/Controllers',
+    '/src/Models',
+    '/routes',
+    '/resources/lang/de',
+    '/database/migrations',
+    '/dist',
+    '/.cursor/rules',
+];
+
+foreach ($dirs as $dir) {
+    mkdir($targetDir . $dir, 0755, true);
+}
+
+$replacements = [
+    '{{PLUGIN_SLUG}}' => $pluginSlug,
+    '{{PLUGIN_NAME}}' => $pluginName,
+    '{{PLUGIN_STUDLY}}' => $pluginStudly,
+    '{{NAMESPACE}}' => $namespace,
+    '{{NAMESPACE_ESCAPED}}' => str_replace('\\', '\\\\', $namespace),
+];
+
+$stubs = [
+    'plugin.json.stub' => 'plugin.json',
+    'composer.json.stub' => 'composer.json',
+    'gitignore.stub' => '.gitignore',
+    'PluginServiceProvider.php.stub' => "src/{$pluginStudly}Plugin.php",
+    'ExampleApp.php.stub' => "src/Apps/{$pluginStudly}/{$pluginStudly}App.php",
+    'web.php.stub' => 'routes/web.php',
+    'lang.php.stub' => 'resources/lang/de/plugin.php',
+    'cursor-rules.mdc.stub' => '.cursor/rules/plotdesk-plugin.mdc',
+    'README.md.stub' => 'README.md',
+];
+
+foreach ($stubs as $stubFile => $targetFile) {
+    $stubPath = $stubsDir . '/' . $stubFile;
+    if (!file_exists($stubPath)) {
+        echo "Warning: Stub not found: {$stubFile}\n";
+        continue;
+    }
+
+    $content = file_get_contents($stubPath);
+    $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+    file_put_contents($targetDir . '/' . $targetFile, $content);
+    echo "  Created: {$targetFile}\n";
+}
+
+echo "\nPlugin '{$pluginName}' created successfully!\n";
+echo "\nNext steps:\n";
+echo "  cd {$pluginSlug}\n";
+echo "  composer install\n";
+echo "  # Start developing your plugin\n";

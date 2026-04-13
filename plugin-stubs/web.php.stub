@@ -1,0 +1,6 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+// Routes are automatically prefixed with /plugins/{{PLUGIN_SLUG}}/
+// and named with plugin.{{PLUGIN_SLUG}}.

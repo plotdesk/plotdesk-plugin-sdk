@@ -1,0 +1,24 @@
+# {{PLUGIN_NAME}}
+
+A plotdesk plugin.
+
+## Installation
+
+This plugin is installed via the plotdesk Plugin Management UI.
+
+## Development
+
+```bash
+composer install
+```
+
+## Structure
+
+- `plugin.json` - Plugin manifest
+- `src/` - PHP source code
+- `src/Apps/` - App classes (AI functions)
+- `routes/` - Web and API routes
+- `resources/lang/` - Translations
+- `database/migrations/` - Database migrations
+- `dist/` - Pre-built frontend assets (if applicable)
+- `vendor/` - Composer dependencies (committed)
