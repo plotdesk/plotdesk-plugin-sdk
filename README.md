@@ -2,6 +2,14 @@
 
 Official SDK for developing plotdesk plugins. Provides base classes, type stubs for IDE autocompletion, and a scaffolding CLI to create new plugin projects.
 
+## Reference Implementation
+
+Before building your own plugin, study the official example plugin which demonstrates every feature this SDK supports:
+
+**https://github.com/plotdesk/plotdesk-example-plugin**
+
+It is a production-ready reference implementation with multiple apps, custom pages, custom chat interfaces, rich payload components, event listeners, scheduled tasks, full EN/DE translations and perfect light/dark mode support. Whenever you are unsure how something should be structured, this repository is the canonical source of truth.
+
 ## Quick Start
 
 ```bash

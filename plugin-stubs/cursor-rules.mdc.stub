@@ -1,5 +1,29 @@
 # plotdesk Plugin Development
 
+## Reference Implementation (WICHTIG: Immer zuerst konsultieren!)
+
+Das offizielle Vorbild-Plugin liegt oeffentlich auf GitHub: **https://github.com/plotdesk/plotdesk-example-plugin**
+
+Es zeigt produktionsreife Implementierungen von praktisch allem was ein Plugin koennen kann:
+- Mehrere Apps mit AI Function Calling (Tasks, Notebook, Analyzer, Webhooks)
+- Custom Inertia Pages (Dashboard, Tasks, Notes, Analytics)
+- Custom Chat Interfaces mit default_chat_enabled (Dashboard + Kanban)
+- Rich Payload Components fuer Chat-Output (9 Vue-Komponenten)
+- Eigene Eloquent Models + Migrations mit Plugin-Tabellen-Prefix
+- Event Listeners (chat.created, chat.message.created, user.joined_team)
+- Scheduled Tasks und Cleanup-Jobs
+- Globale + gruppen-spezifische Permissions
+- Vollstaendige EN/DE Translations (Backend + Frontend)
+- Perfekter Light/Dark Mode Support via Design Tokens
+- PluginSharedData fuer Inertia Props
+- PluginAi::call() und PluginChat::run() Beispiele
+
+**Wenn du nicht weisst, wie etwas konkret umgesetzt werden soll: Schau zuerst dort, wie das Beispiel-Plugin es loest.** Es ist die Single Source of Truth fuer Plugin-Konventionen, Datei-Struktur, Naming und Patterns. Klone es bei Bedarf lokal als Referenz:
+
+```bash
+git clone https://github.com/plotdesk/plotdesk-example-plugin
+```
+
 ## Architektur
 - Dieses Plugin wird als plotdesk Extension geladen
 - Es laeuft im Kontext einer plotdesk-Instanz (Laravel 12, PHP 8.3)

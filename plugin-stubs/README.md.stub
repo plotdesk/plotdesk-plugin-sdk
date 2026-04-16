@@ -2,6 +2,14 @@
 
 A plotdesk plugin.
 
+## Reference Implementation
+
+For working examples of every feature the plotdesk plugin system supports (multiple apps, custom pages, custom chat interfaces, payload components, event listeners, scheduled tasks, full translations, light/dark mode), see the official example plugin:
+
+**https://github.com/plotdesk/plotdesk-example-plugin**
+
+It is the canonical reference for plugin structure, naming, conventions and patterns.
+
 ## Installation
 
 This plugin is installed via the plotdesk Plugin Management UI:
