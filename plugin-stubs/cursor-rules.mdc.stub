@@ -81,13 +81,22 @@ git clone https://github.com/plotdesk/plotdesk-example-plugin
 
 ## Frontend Build
 - Das Plugin nutzt `@plotdesk/plugin-vite` fuer den Frontend-Build
-- Vue und Inertia werden NICHT gebundelt sondern vom plotdesk Host bereitgestellt (externalized via window.__plotdesk_shared)
+- Vue, Inertia und `@plotdesk/sdk` werden NICHT gebundelt sondern vom plotdesk Host bereitgestellt (externalized via window.__plotdesk_shared)
 - Konfiguration in vite.config.js: Pages und Payloads als Entry Points definieren
 - `npm run build` baut nach dist/ (ESM Module + Tailwind CSS)
 - `npm run dev` startet Watch-Mode fuer Entwicklung
 - In Vue-Komponenten Vue und Inertia ganz normal importieren (import { ref } from 'vue') - Vite externalisiert automatisch
 - Tailwind CSS wird automatisch nach dist/css/plugin.css kompiliert
 - tailwind.config.js und postcss.config.js sind vorkonfiguriert
+
+## @plotdesk/sdk (Frontend SDK)
+- Das Plugin bekommt `@plotdesk/sdk` kostenlos mit dazu (externalized, null Bundle-Kosten)
+- Enthaelt geteilte Composables und Vue-Komponenten die sich in jedes Plugin einbetten lassen ohne Look&Feel zu brechen
+- `import { useTranslator, useAiModels, PluginModelSwitcher } from '@plotdesk/sdk'`
+- `useTranslator(ref)` erzeugt eine $t Funktion, drop-in Ersatz fuer eigene translator.js
+- `useAiModels({ onlyVision, onlyFunctionCalling, onlyProviders, includeDeprecated, includeHidden })` liest reaktiv die `page.props.aiModels` die der Host auf jedem Request teilt (team/gruppen-spezifische Filterung kommt vom Host)
+- `<PluginModelSwitcher v-model="modelId" :label="..." only-vision show-ratings />` gibt den User einen Modell-Picker der genau so aussieht wie der Chat-Model-Switcher
+- NIEMALS eine eigene Modell-Liste hardcoden — der Host weiss welche Modelle fuer das aktuelle Team lizenziert sind
 
 ## Build & Git
 - vendor/ wird ins Git committed (Plugin liefert Dependencies fertig aus)
