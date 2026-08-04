@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 class ChatMessage extends Model
@@ -20,7 +21,13 @@ class ChatMessage extends Model
 
     public function chatMessageApps() {}
 
-    public function getUserMainAttribute() {}
+    /** @return HasMany<AiUsage, $this> */
+    public function aiUsages(): HasMany {}
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getUserMainAttribute(): ?array {}
 
     public function attachPayload($function, $arguments, $results) {}
 

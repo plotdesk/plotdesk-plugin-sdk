@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Chat extends Model
 {
+    public $incrementing;
+
     public function team(): BelongsTo {}
 
     public function user(): BelongsTo {}
@@ -18,7 +20,10 @@ class Chat extends Model
 
     public function saves(): HasMany {}
 
-    public function getUserMainAttribute() {}
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getUserMainAttribute(): ?array {}
 
     public function orderedMessages() {}
 

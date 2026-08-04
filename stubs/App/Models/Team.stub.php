@@ -10,6 +10,14 @@ use Illuminate\Http\UploadedFile;
 class Team
 {
     /**
+     * Chat output privacy when a scheduler has no group (platform scope) or the group
+     * cannot be resolved: only tenant-level forcing and defaults apply.
+     *
+     * @return array{is_private: bool, is_forced: bool, forced_source: ?string, default_is_private: bool}
+     */
+    public function resolveSchedulerChatPrivacyPolicy(?bool $requested = null): array {}
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function teamOwner(): BelongsTo {}

@@ -30,6 +30,11 @@ class StorageService
      */
     public static function savePresetFile(string $fileContent, string $filename, int $teamId, int $presetId): array {}
 
+    /**
+     * @return array{success: bool, storage_path: string}
+     */
+    public static function saveFileContainerFile(string $fileContent, string $filename, int $teamId, int $containerId): array {}
+
     public static function getPrivateFileForChat(string $storagePath): ?string {}
 
     public static function guessMimeType(string $filename): string {}
@@ -44,7 +49,7 @@ class StorageService
 
     public static function cleanHtmlForMarkdownConversion(string $htmlContent): string {}
 
-    public static function getImageContents(?Team $team, string $path): void {}
+    public static function getImageContents(?Team $team = null, string $path): void {}
 
     public static function convertFileToContainerIfNecessary($file, $path) {}
 }

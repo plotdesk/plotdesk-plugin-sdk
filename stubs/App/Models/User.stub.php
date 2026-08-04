@@ -5,6 +5,7 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\UploadedFile;
 
 class User
@@ -12,6 +13,8 @@ class User
     public function setEmailAttribute(mixed $value = null): void {}
 
     public function getNameAttribute(?string $value = null): ?string {}
+
+    public function isDeactivated(): bool {}
 
     public function chats() {}
 
@@ -32,13 +35,42 @@ class User
     public function getCachedCurrentTeam(): ?Team {}
 
     /**
-     * Get all groups for the current team with proper filtering for admin view
+     * Get all groups for the current team with proper filtering for admin view.
+     *
+     * Returns a flat collection: every accessible group sits at the top level,
+     * children included. The frontend rebuilds the tree from `group_id` /
+     * `grandparent_group_id`, so eager-loading the nested `groups` relation here
+     * would only duplicate every subgroup into the payload.
+     *
+     * Do not widen this set to "everything reachable in the tree": it is not just
+     * display data. {@see self::getGroupIds()} derives access decisions from it in
+     * Workflow, Report, Chatbot, TableConnection, GlobalSearch and Billing, so any
+     * extra id here grants access to that group's resources.
      *
      * @return Collection
      */
-    public static function getGroups() {}
+    public static function getGroups(?self $user = null) {}
 
-    public static function getGroupIds() {}
+    public static function getGroupIds(?self $user = null) {}
+
+    /**
+     * Direct group membership of a user (via group_users pivot) scoped to the
+     * user's active team, without considering public groups or hierarchy
+     * inheritance. Used for permission checks where only explicit memberships
+     * in the CURRENT tenant should count.
+     *
+     * Cross-team scoping matters: the polymorphic group-assignment system
+     * (see {@see \App\Concerns\HasGroupAssignments::scopeAvailableForUser()}
+     * and {@see \App\Concerns\HasGroupAssignments::isExcludedForUser()}) feeds
+     * these IDs into the inclusion/exclusion logic. A membership in another
+     * team would otherwise leak across tenants - e.g. for an exclude-only
+     * assignment in the current team, every group the user belongs to in any
+     * other team would falsely satisfy `isAvailableForGroup()`, masking an
+     * intentional exclusion in the current team.
+     *
+     * @return array<int,int>
+     */
+    public static function getDirectGroupIds(?self $user = null): array {}
 
     /**
      * Get all root groups for team admin views
@@ -54,7 +86,17 @@ class User
      */
     public static function getTeamUsers() {}
 
-    public static function hasGroupAccess($groupId) {}
+    public static function hasGroupAccess($groupId, ?self $user = null) {}
+
+    /**
+     * Flush the {@see self::hasGroupAccess()} per-request memo.
+     *
+     * Called from observers when group memberships / role assignments change,
+     * and from tests that switch the authenticated user inside a single PHP
+     * process (so the previous user's cached `true/false` does not leak into
+     * the next subject's permission checks).
+     */
+    public static function flushHasGroupAccessMemo(): void {}
 
     public function getIsPlatformAdminAttribute(): bool {}
 
@@ -90,7 +132,10 @@ class User
 
     public function groups() {}
 
-    public function emailAccounts() {}
+    /**
+     * @return HasMany<EmailAccount, $this>
+     */
+    public function emailAccounts(): HasMany {}
 
     /**
      * Get the user roles for the user.
@@ -129,6 +174,16 @@ class User
     public function hasAnyPermission(array $permissions, ?int $groupId = null): bool {}
 
     /**
+     * Reset the per-instance permission cache so the next permission check
+     * recomputes against the current `current_team_id`. Required when the team
+     * context is switched on an existing User instance within a single request
+     * - e.g. resolving AI-writable file containers for a chat whose team
+     * differs from the user's active team. The Redis batch cache is already
+     * team-keyed, so only the instance memo can go stale on a team switch.
+     */
+    public function resetCachedPermissionsData(): void {}
+
+    /**
      * @param  int|string|null  $teamId
      */
     public static function clearPermissionsBatchCache(int $userId, mixed $teamId = null): void {}
@@ -150,6 +205,7 @@ class User
     /**
      * Determine if the current API token has a given scope.
      *
+     * @param  string  $ability
      * @return bool
      */
     public function tokenCan(string $ability) {}
@@ -157,6 +213,7 @@ class User
     /**
      * Determine if the current API token does not have a given scope.
      *
+     * @param  string  $ability
      * @return bool
      */
     public function tokenCant(string $ability) {}
@@ -164,6 +221,9 @@ class User
     /**
      * Create a new personal access token for the user.
      *
+     * @param  string  $name
+     * @param  array  $abilities
+     * @param  \DateTimeInterface|null  $expiresAt
      * @return \Laravel\Sanctum\NewAccessToken
      */
     public function createToken(string $name, array $abilities = ['*'], ?DateTimeInterface $expiresAt = null) {}
@@ -202,6 +262,7 @@ class User
     /**
      * Update the user's profile photo.
      *
+     * @param  \Illuminate\Http\UploadedFile  $photo
      * @param  string  $storagePath
      * @return void
      */
@@ -278,6 +339,7 @@ class User
      * Determine if the user has the given role on the given team.
      *
      * @param  mixed  $team
+     * @param  string  $role
      * @return bool
      */
     public function hasTeamRole($team, string $role) {}
@@ -294,6 +356,7 @@ class User
      * Determine if the user has the given permission on the given team.
      *
      * @param  mixed  $team
+     * @param  string  $permission
      * @return bool
      */
     public function hasTeamPermission($team, string $permission) {}
@@ -308,14 +371,14 @@ class User
     /**
      * Get the entity's read notifications.
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<DatabaseNotification, $this>
      */
     public function readNotifications() {}
 
     /**
      * Get the entity's unread notifications.
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<DatabaseNotification, $this>
      */
     public function unreadNotifications() {}
 
@@ -331,6 +394,7 @@ class User
      * Send the given notification immediately.
      *
      * @param  mixed  $instance
+     * @param  array|null  $channels
      * @return void
      */
     public function notifyNow($instance, ?array $channels = null) {}

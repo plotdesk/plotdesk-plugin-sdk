@@ -4,12 +4,17 @@ namespace App\Plugins\Events;
 
 class PluginEvent
 {
+    public string $name;
+
+    public array $payload;
+
     /**
      * Dispatch the event with the given arguments.
      *
+     * @param  mixed  ...$arguments
      * @return mixed
      */
-    public static function dispatch() {}
+    public static function dispatch($arguments) {}
 
     /**
      * Dispatch the event with the given arguments if the given truth test passes.
@@ -32,7 +37,8 @@ class PluginEvent
     /**
      * Broadcast the event with the given arguments.
      *
+     * @param  mixed  ...$arguments
      * @return \Illuminate\Broadcasting\PendingBroadcast
      */
-    public static function broadcast() {}
+    public static function broadcast($arguments) {}
 }

@@ -2,13 +2,19 @@
 
 namespace App\Apps;
 
+use App\Models\App;
 use App\Models\ChatMessage;
 use App\Models\ChatMessageApp;
+use App\Models\Team;
 use App\Models\User;
 use App\Models\UserAppToken;
 
 class BasicApp
 {
+    public App $app;
+
+    public Team $team;
+
     public function getFunctions(): array {}
 
     public static function getRoutes() {}
