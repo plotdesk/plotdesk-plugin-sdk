@@ -6,16 +6,8 @@ use App\Models\Team;
 
 class StorageService
 {
-    /**
-     * Public asset: anyone with the URL can read it without a login, and it is
-     * never deleted, not even with the chat. For anything private use
-     * savePrivateFileForChat().
-     */
     public static function downloadAndSaveAssetFromUrl(string $url, string $filename): string|false {}
 
-    /**
-     * Public asset, same rules as downloadAndSaveAssetFromUrl().
-     */
     public static function downloadAndSaveAssetFromFile(string $fileContent, string $filename): string|false {}
 
     /**

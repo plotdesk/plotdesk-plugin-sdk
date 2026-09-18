@@ -44,9 +44,8 @@ git clone https://github.com/plotdesk/plotdesk-example-plugin
 
 ## Verfuegbare plotdesk APIs
 - StorageService::savePrivateFileForChat($content, $filename, $chatId) - Private Dateien speichern
-- StorageService::downloadAndSaveAssetFromUrl($url, $filename) - URL als oeffentliches Asset speichern
-- StorageService::downloadAndSaveAssetFromFile($content, $filename) - Content als oeffentliches Asset speichern
-  - Achtung: Jeder mit dem Link ruft diese Dateien ohne Login ab, und sie werden nie geloescht, auch nicht mit dem Chat. Nur fuer Inhalte, die wirklich oeffentlich sein duerfen (Logos, Vorlagen). Generierte Bilder, Exporte, Kunden- und Personendaten: savePrivateFileForChat().
+- StorageService::downloadAndSaveAssetFromUrl($url, $filename) - URLs als oeffentliche Assets speichern
+- StorageService::downloadAndSaveAssetFromFile($content, $filename) - Content als Asset speichern
 - $message->attachPayload($function, $args, $results) - Rich UI Output (returns UUID)
 - $message->setPayload($payloadId, $function, $args, $results) - Payload aktualisieren
 - $message->setLoading($key, $text) - Loading Spinner anzeigen
