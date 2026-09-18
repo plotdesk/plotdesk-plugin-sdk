@@ -106,6 +106,7 @@ git clone https://github.com/plotdesk/plotdesk-example-plugin
 - Nach composer install/update: vendor/ committen
 - Nach npm run build: dist/ committen
 - IMMER beide Schritte ausfuehren und committen bevor ein Release erstellt wird
+- NIEMALS voraussetzen, dass auf einer Instanz oder einem Plotdesk-Dienst etwas von Hand eingerichtet wird (Systempaket, PHP-Extension, Python-Paket, nginx-Config, `.env`-Eintrag). Was das Plugin braucht, liefert es selbst mit (vendor/, dist/, Migrationen, Default-Settings). Fehlt dem Host etwas, kommt es per PR in das zustaendige Repo - oder das Plugin kommt ohne aus
 
 ## Custom Group Interfaces
 - Plugins can register custom interface types that appear in Group Settings as "View Mode" options
