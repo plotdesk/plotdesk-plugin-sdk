@@ -39,6 +39,8 @@ class StorageService
 
     public static function guessMimeType(string $filename): string {}
 
+    public static function safeDownloadMimeType(string $filename, ?string $knownMimeType = null): string {}
+
     public static function deletePrivateFilesForChat(string $chatId): void {}
 
     public static function deletePresetFiles(int $teamId, int $presetId): void {}
