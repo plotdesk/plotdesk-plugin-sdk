@@ -99,6 +99,20 @@ git clone https://github.com/plotdesk/plotdesk-example-plugin
 - `<PluginModelSwitcher v-model="modelId" :label="..." only-vision show-ratings />` gibt den User einen Modell-Picker der genau so aussieht wie der Chat-Model-Switcher
 - NIEMALS eine eigene Modell-Liste hardcoden — der Host weiss welche Modelle fuer das aktuelle Team lizenziert sind
 
+### Bausteine: benutzen, nicht nachbauen
+- Das SDK bringt die Grundbausteine der Designfamilie Plotdesk als Vue-Komponenten mit. Sie benutzen nur die `--pd-*`-Tokens, tragen damit in jeder Instanz die Teamfarbe und beide Themes und haben Tastatur, Fokus und Namen fuer Vorleser eingebaut.
+- **Diese Bausteine benutzen, keine eigenen Knoepfe, Felder, Tabellen oder Dialoge bauen:**
+  - `PdButton` (variant `primary` | `secondary` | `ghost` | `danger`, size `sm` | `md` | `lg`, `loading`, `disabled`, Icon im Slot `#icon`), `PdIconButton` (nur Icon, `label` ist Pflicht)
+  - `PdField` (Label, Hinweis, Fehler) um `PdInput` (auch `type="number"` mit `unit`), `PdSelect` (`options`), `PdTextarea`
+  - `PdCheckbox`, `PdRadioGroup`/`PdRadio`, `PdFieldset`, `PdSwitch`
+  - `PdCard`, `PdStatus` (Pille mit Punkt und Wort), `PdTag` (Kategorie), `PdChip` (Filter mit Zaehler)
+  - `PdTabs`, `PdDialog` (`v-model:open`, Fokus bleibt drin, Escape, Fokus zurueck), `PdEmptyState`
+  - `PdTable` (sortierbar, Laden, Leer, Fehler, scrollt seitlich im Rahmen; `database` fuer Stammdaten nach dem Datenbank-Standard)
+- `import { PdButton, PdField, PdInput, PdTable } from '@plotdesk/sdk'`
+- Live ansehen, mit der Teamfarbe der Instanz: `/plugins/building-blocks` (Recht `view_plugin_status` oder `manage_plugins`). API und Beispiele: README von `@plotdesk/sdk` (`packages/plugin-sdk-js/README.md` im Host-Repo).
+- Eigenes CSS nur fuer das, was es als Baustein nicht gibt, und dann nur auf den Tokens. Die Styles der Bausteine sind scoped: Eigene Klassen stoeren sie nicht, Abstand und Platz kommen von aussen.
+- Texte weiter ueber `$t`; die wenigen eigenen Woerter der Bausteine („kein Wert“, „Wird geladen“, „Erneut versuchen“) folgen der Sprache des Hosts (Deutsch, Englisch) und lassen sich per Prop ersetzen.
+
 ## Build & Git
 - vendor/ wird ins Git committed (Plugin liefert Dependencies fertig aus)
 - dist/ wird ins Git committed (Pre-built Frontend Assets)
@@ -122,65 +136,97 @@ git clone https://github.com/plotdesk/plotdesk-example-plugin
 
 Plugin-Komponenten (Interfaces, Payloads) werden als standalone .js Dateien in dist/ ausgeliefert und dynamisch per PluginComponentWrapper geladen. Sie haben KEINEN Zugriff auf Tailwind CSS oder Vue SFC Syntax – stattdessen verwenden sie das plotdesk Design Token System.
 
+**Zuerst die Bausteine aus `@plotdesk/sdk`** (Abschnitt „Bausteine: benutzen, nicht nachbauen“ oben). Die Muster weiter unten (Karten, Status-Badge, Kanban) gelten nur fuer das, was es als Baustein nicht gibt.
+
 ### Design Token System
 
 Die PluginComponentWrapper injiziert CSS Custom Properties auf dem .pd-plugin Container. Plugins MUESSEN diese Tokens verwenden statt hardcodierter Werte, damit sie automatisch im Light- und Dark-Mode korrekt aussehen.
 
 #### Verfuegbare CSS Custom Properties
 
+Quelle und genaue Werte: `resources/js/Components/Plugins/PluginComponentWrapper.vue` im Host. Die Werte folgen der
+Designfamilie Plotdesk (Kundenportal, Plugins, Canvas teilen dieselben Rollen). Jede Schriftrolle haelt 4,5:1 auf
+Karte und grauer Flaeche, jeder Rahmen, jedes Icon und der Fokus 3:1, hell wie dunkel.
+
 ```css
-/* Typografie */
---pd-font              /* 'Figtree', system-ui, -apple-system, sans-serif */
+/* Typografie: Figtree in 400, 500, 600 (kein Bold, es wird nicht ausgeliefert) */
+--pd-font, --pd-font-mono
+--pd-font-weight-regular | -medium | -semibold
+--pd-font-size-xs | -sm | -base | -md | -lg | -xl | -2xl | -3xl | -4xl | -5xl   /* 12 13 14 16 18 20 24 30 36 48 px */
+--pd-leading-tight | -normal
 
-/* Hintergruende */
---pd-bg-page           /* Seiten-Hintergrund (light: #f9fafb, dark: #0f0f0f) */
---pd-bg-card           /* Karten-Hintergrund (light: #ffffff, dark: #141414) */
---pd-bg-card-hover     /* Karten-Hover (light: #f9fafb, dark: #1a1a1a) */
---pd-bg-subtle         /* Subtiler Hintergrund fuer Badges/Sections (light: #f3f4f6, dark: #1e2229) */
---pd-bg-muted          /* Gedaempfter Hintergrund (light: #e5e7eb, dark: #2a2e35) */
+/* Flaechen */
+--pd-bg-page           /* Seite */
+--pd-bg-card           /* Karte */
+--pd-bg-card-hover     /* Karte beim Ueberfahren */
+--pd-bg-subtle         /* graue Flaeche, etwa hinter Abschnitten */
+--pd-bg-muted          /* dunkleres Grau: Spuren, Skeletons */
+--pd-bg-elevated       /* Menues, Dialoge, Popover */
+--pd-bg-raised         /* was auf grauer Flaeche hervortritt (gewaehltes Segment) */
+--pd-bg-highlight      /* markierte Zeile in Listen und Menues, auch auf schwebenden Flaechen */
 
-/* Borders */
---pd-border            /* Standard-Border (light: #e5e7eb, dark: rgba(255,255,255,0.06)) */
---pd-border-light      /* Subtiler Border fuer Trennlinien (light: #f3f4f6, dark: rgba(255,255,255,0.04)) */
---pd-border-hover      /* Hover-Border (light: #d1d5db, dark: rgba(255,255,255,0.12)) */
+/* Linien */
+--pd-border            /* Trennlinie und Kartenrand */
+--pd-border-light      /* feine Trennlinie zwischen Zeilen */
+--pd-border-hover      /* Rand beim Ueberfahren */
+--pd-border-field      /* Rand von Eingabefeldern und Zweitknoepfen (3:1) */
 
 /* Text */
---pd-text-primary      /* Haupttext (light: #111827, dark: #f3f4f6) */
---pd-text-secondary    /* Sekundaertext (light: #6b7280, dark: #9ca3af) */
---pd-text-muted        /* Gedaempfter Text fuer Labels (light: #9ca3af, dark: #6b7280) */
---pd-text-inverse      /* Invertierter Text fuer dunkle Hintergruende */
+--pd-text-primary | -secondary | -muted   /* alle drei lesbar (4,5:1) */
+--pd-text-inverse      /* Schrift auf dunkler Flaeche im hellen Theme und umgekehrt */
+--pd-text-on-brand     /* Schrift auf --pd-brand */
 
-/* Semantische Farben */
---pd-brand             /* plotdesk Primaerfarbe: #0C359E */
---pd-brand-light       /* Transparente Variante fuer Hintergruende */
---pd-success           /* Erfolg/Positiv: #059669 */
---pd-success-light     /* Transparente Variante */
---pd-warning           /* Warnung: #d97706 */
---pd-warning-light     /* Transparente Variante */
---pd-danger            /* Fehler/Negativ: #dc2626 */
---pd-danger-light      /* Transparente Variante */
---pd-info              /* Info/Neutral: #2563eb */
---pd-info-light        /* Transparente Variante */
+/* Marke: folgt der Teamfarbe */
+--pd-brand             /* Fuellung: Primaerknopf, Schalter, Fortschritt */
+--pd-brand-text        /* Marke als Schrift und Linie: Links, gewaehlter Reiter */
+--pd-brand-hover       /* Primaerknopf beim Ueberfahren */
+--pd-brand-light       /* Toenung: Auswahl, gewaehlte Zeile */
+--pd-focus             /* Fokusring: 2px, 2px Abstand */
 
-/* Border Radius */
---pd-radius-sm         /* 6px – kleine Badges, Tags */
---pd-radius-md         /* 8px – Buttons, kleine Karten */
---pd-radius-lg         /* 12px – Karten, Panels */
---pd-radius-xl         /* 16px – grosse Container */
+/* Status: Vollfarbe (Punkt, Icon), -text (Schrift), -light (Toenung als Flaeche) */
+--pd-success, --pd-success-text, --pd-success-light
+--pd-warning, --pd-warning-text, --pd-warning-light
+--pd-danger,  --pd-danger-text,  --pd-danger-light
+--pd-info,    --pd-info-text,    --pd-info-light      /* Himmelblau, nicht im Farbton der Marke */
+--pd-neutral, --pd-neutral-text, --pd-neutral-light
+--pd-mix-tint          /* Anteil einer Toenung, fuer eigene Mischungen mit color-mix() */
 
-/* Schatten */
---pd-shadow-sm         /* Minimaler Schatten fuer ruhende Elemente */
---pd-shadow-md         /* Mittlerer Schatten fuer Hover-Effekte */
---pd-shadow-card       /* Standard Karten-Schatten */
+/* Diagramme: erst die Marke, dann Farbtoene ohne Statusbedeutung */
+--pd-chart-1 … --pd-chart-5, --pd-chart-grid, --pd-chart-label
 
-/* Spacing */
---pd-space-xs          /* 4px */
---pd-space-sm          /* 8px */
---pd-space-md          /* 12px */
---pd-space-lg          /* 16px */
---pd-space-xl          /* 24px */
---pd-space-2xl         /* 32px */
+/* Form, Abstand, Tiefe */
+--pd-radius-xs | -sm | -md | -lg | -xl | -full             /* 4 6 8 12 16 px, Pille */
+--pd-space-xs | -sm | -md | -lg | -xl | -2xl | -3xl | -4xl  /* 4 8 12 16 24 32 48 64 px */
+--pd-shadow-sm | -card | -md | -lg
+
+/* Bewegung und Ebenen (bei reduzierter Bewegung sind die Dauern 0) */
+--pd-duration-fast | -base | -slow, --pd-ease-out
+--pd-ease-spring       /* Feder ohne Zurueckschwingen: Reiter, Segmente, Schalter */
+--pd-press-scale       /* so weit gibt ein Knopf beim Druecken nach */
+--pd-z-sticky | -header | -dropdown | -overlay | -dialog | -toast
+--pd-scrim             /* Abdunklung hinter Dialogen */
+
+/* Rollen: dieselbe Dichte fuer alle Plugins */
+--pd-font-size-body, --pd-font-size-title
+--pd-control-height (36px), --pd-row-height (48px), --pd-icon-size (20px)
+--pd-radius-control, --pd-radius-box, --pd-radius-overlay
+--pd-pad-control (12px), --pd-pad-box (24px), --pd-gap (16px)
+--pd-check-size, --pd-toggle-size (16px), --pd-shadow-box, --pd-font-size-kpi
+--pd-scroll-shadow     /* Rand einer Tabelle, die seitlich scrollt */
+--pd-bg-tooltip, --pd-text-tooltip
+
+/* KI: der Ring einer Aktion, die KI benutzt, und das Licht an einem Element, an dem sie arbeitet.
+   Nur fuer KI, nie als Schmuck. */
+--pd-ai-1 … --pd-ai-4, --pd-ai-core, --pd-ai-glow
 ```
+
+#### Regeln, die dazugehoeren
+
+- **Farbe nie allein.** Ein Status traegt immer sein Wort (Pille mit Punkt und Text), ein Delta Pfeil und Vorzeichen.
+- **Schrift auf Toenung** nimmt die `-text`-Variante, nie die Vollfarbe: `color: var(--pd-warning-text); background: var(--pd-warning-light);`
+- **Felder und Zweitknoepfe** tragen `--pd-border-field`, Trennlinien `--pd-border`.
+- **Fokus** sichtbar lassen: `outline: 2px solid var(--pd-focus); outline-offset: 2px;` auf `:focus-visible`.
+- **Modals und Menues, die nach `<body>` wandern,** brauchen die Klasse `pd-plugin` (und im Dunkeln `pd-dark`), sonst sind die Tokens dort leer.
 
 ### Grundstruktur einer Interface-Komponente
 
